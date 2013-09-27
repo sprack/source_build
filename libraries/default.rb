@@ -100,10 +100,23 @@ end
 
 # pull source file
 def pull_source(attrs={})
-   outfile = "#{Chef::Config[:file_cache_path]}/#{attrs['file']}"
+   outfile = "#{Chef::Config[:file_cache_path]}/#{attrs['src_file']}"
+
+   def checksum_file(shasum="", filename="", error_level=0)
+      (cksum, fn) = `sha256sum #{filename}`.split(/\s+/)
+      if cksum != shasum
+         if error_level == 0
+            Chef::Application.warn("#{filename} MISMATCH DELETE/REPULL", 1)
+            file "#{filename}" do
+               action :delete
+            end
+         end
+         Chef::Application.fatal!("#{filename} MISMATCH CHECKSUM", 1) if error_level == 1
+      end
+   end
 
    if attrs['url'] =~ /^ftp/
-      execute "ftp_#{attrs['file']}" do
+      execute "ftp_#{attrs['src_file']}" do
          command "curl #{attrs['url']} -o #{outfile}"
          creates "#{outfile}"
          action :run
@@ -147,7 +160,7 @@ def compare_list(attrs={})
    attrs['compare_list'].each do |src_file, dst_file|
       src = `#{md5sum} #{Chef::Config[:file_cache_path]}/#{attrs['src_dir']}/#{src_file}`.split(/\s+/)
       dst = `#{md5sum} #{attrs['prefix']}/#{dst_file}`.split(/\s+/)
-      if (src[0] != dst[0])
+      if (src[0] != dst[0]) || src[0].nil? || dst[0].nil?
          p "#{src_file} #{attrs['prefix']}/#{dst_file}"
          p "#{src[0]} #{dst[0]}"
          match = false
