@@ -236,3 +236,20 @@ def ldconfig(attrs={})
       action :run
    end
 end
+
+# ----------------------------------------------------------------------- #
+
+# def to iterate through node values and print out for debugging
+def node_info()
+   node.each do |k,v|
+      if "#{v.class}" == "Chef::Node::ImmutableArray" || "#{v.class}" == "Chef::Node::ImmutableMash"
+         puts "[#{k}]"
+         v.each do |x,y|
+            puts "\t#{x}\t#{y}"
+         end
+      else
+         puts "[#{k}]\t#{v}"
+      end
+      puts
+   end
+end
