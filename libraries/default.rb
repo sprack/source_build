@@ -207,10 +207,13 @@ end
 # ----------------------------------------------------------------------- #
 
 # make
-def make(attrs={})
+def make(attrs={},multi=true)
+   smp_make=""
+   smp_make="-j #{node['cpu']['total']}" if multi == true
+
    execute "make_source" do
       cwd "#{Chef::Config[:file_cache_path]}/#{attrs['src_dir']}"
-      command "make #{attrs['make_flags']}"
+      command "make #{smp_make} #{attrs['make_flags']}"
       action :run
    end
 end
